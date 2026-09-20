@@ -1,0 +1,39 @@
+http:
+  listen_ip:
+  listen_port: 3000
+  base_url: https://<BASE URL>
+  tls:
+    enabled: true
+    certificate_path: /path/to/webserver-cert.pem
+    key_path: /path/to/webserver-key.pem
+
+acme:
+  limits:
+    max_certs_per_user: 50
+    # when it is allowed to start requesting for cert renewal
+    renewal_start: 30
+  endpoints:
+    - main-dns:
+        ca: rpcca
+        ca_name: <CA NAME>
+        template: server_auth1
+        challenge_types:
+            - dns-01
+
+database:
+  hostname:
+  port: 27017
+  database: <DATABASE NAME>
+  username:
+  password:
+  connection_uri:
+
+rpcca:
+  hostname:
+  port: 44444
+  ca_file: /path/to/ca-cert.pem
+  ca_name: <CA_NAME>
+  key_type: "rsa"
+
+ca_certs_file: /path/to/ca-cert.pem
+encryption_key: <ENCRYPTION_KEY>
