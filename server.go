@@ -52,7 +52,8 @@ func main() {
 	}
 
 	// init gRPC connection
-	rpc, err := models.ConnectRpc("dns:rpcca.home.arpa:44444")
+	address := fmt.Sprintf("dns:%s:%d", cfg.Rpcca.Hostname, cfg.Rpcca.Port)
+	rpc, err := models.ConnectRpc(address)
 	if err != nil {
 		log.Fatal("There was an error connecting to the gRPC server: ", err)
 	}
