@@ -29,7 +29,7 @@ func InitApp(mi *models.MongoInstance, rpc *models.RpcInstance, cfg *config.Conf
 	certificateRepo := certservice.NewCertificateRepository(mi, rpc)
 	acmeRepo := models.NewAcmeRepository(mi)
 
-	// initialize default l (separate to the Fiber one)
+	// initialize default logger (separate from the Fiber one)
 	l := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     slog.LevelDebug,
 		AddSource: true,

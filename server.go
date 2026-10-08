@@ -63,6 +63,7 @@ func main() {
 		log.Fatal("There was an error initializing app: ", err)
 	}
 
+	errChan := make(chan error, 1)
 	go func() {
 		// check if TLS is supposed to be used
 		if cfg.HTTP.TLS.Enabled {
@@ -70,7 +71,8 @@ func main() {
 
 			certKey, err := tls.LoadX509KeyPair(cfg.HTTP.TLS.CertificatePath, cfg.HTTP.TLS.KeyPath)
 			if err != nil {
-				log.Fatal("error loading TLS certificate or key: ", err)
+				errChan <- fmt.Errorf("error loading TLS certificate or key: %w", err)
+				return
 			}
 
 			tlsConfig := &tls.Config{
@@ -84,7 +86,8 @@ func main() {
 
 			err = app.Listen(fmt.Sprintf("%s:%d", cfg.HTTP.ListenIP, cfg.HTTP.ListenPort), *fiberConfig)
 			if err != nil {
-				log.Fatal("error: ", err)
+				errChan <- fmt.Errorf("error: %w", err)
+				return
 			}
 			return
 		}
@@ -92,21 +95,26 @@ func main() {
 		log.Println("Starting server with TLS disabled")
 		err := app.Listen(fmt.Sprintf("%s:%d", cfg.HTTP.ListenIP, cfg.HTTP.ListenPort))
 		if err != nil {
-			log.Fatal("error:", err)
+			errChan <- fmt.Errorf("error: %w", err)
 		}
 	}()
 
 	defer func() {
 		err := models.Disconnect(mi)
 		if err != nil {
-			log.Fatal("There was an error disconnecting from database: ", err)
+			log.Printf("There was an error disconnecting from database: %v\n", err)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
-	<-quit
+	select {
+	case err := <-errChan:
+		log.Printf("Server error: %v\n", err)
+	case <-quit:
+		log.Println("Received quit signal")
+	}
 
 	log.Println("Received quit signal")
 
